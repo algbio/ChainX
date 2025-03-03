@@ -17,6 +17,7 @@ namespace chainx
     std::string matchType = "MUM";    //all MEMs or just consider MUMs (i.e., single occurence in query and ref)
     bool naive = false;               //use naive 2d dynamic programming algorithm similar to edit distance
     bool all2all = false;             //compute all to all global distance among query sequences
+    bool diagonal = false;            //compute optimal chain by using diagonal distance
   };
 
   void parseandSave_chainx(int argc, char** argv, Parameters &param)
@@ -28,6 +29,7 @@ namespace chainx
        clipp::option("-a") & (clipp::required("MEM").set(param.matchType) | clipp::required("MUM").set(param.matchType)).doc("anchor type (default = MUM)"),
        clipp::option("--all2all").set(param.all2all).doc("output all to all global distances among query sequences in phylip format"),
        clipp::option("--naive").set(param.naive).doc("use slow 2d dynamic programming algorithm for correctness check"),
+       clipp::option("--optimal").set(param.diagonal).doc("compute optimal chain by using diagonal distance"),
        clipp::required("-m") & (clipp::required("g").set(param.mode) | clipp::required("sg").set(param.mode)).doc("distance function (e.g., global or semi-global)"),
        clipp::required("-q") & clipp::value("qpath", param.qfile).doc("query sequences in fasta or fastq format"),
        clipp::required("-t") & clipp::value("tpath", param.tfile).doc("target sequence in fasta format")
@@ -46,6 +48,7 @@ namespace chainx
     if (!param.naive) std::cerr << "INFO, chainx::parseandSave, mode = " << param.mode << std::endl;
     if (param.naive) std::cerr << "INFO, chainx::parseandSave, mode = " << param.mode << " (naive 2d DP)" << std::endl;
     if (param.all2all) std::cerr << "INFO, chainx::parseandSave, computing all-to-all distances" << std::endl;
+    if (param.diagonal) std::cerr << "INFO, chainx::parseandSave, computing optimal chain with diagonal distance" << std::endl;
     std::cerr << "INFO, chainx::parseandSave, anchor : minimim length = " << param.minLen << ", type = " << param.matchType << std::endl;
 
     if (! exists(param.tfile))
@@ -58,6 +61,12 @@ namespace chainx
     {
       std::cerr << "ERROR, chainx::parseandSave, query sequence file could not be opened" << std::endl;
       exit(1);
+    }
+
+    if (param.naive && param.diagonal)
+    {
+        std::cerr << "ERROR, chainx::parseandSave, naive and optimal chaining mode are not compatible" << std::endl;
+        exit(1);
     }
 
     if (param.all2all)

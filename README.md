@@ -24,13 +24,15 @@ make
 ## Usage
 ```
 SYNOPSIS
-        ./chainX [-l <length>] [-a (MEM|MUM)] [--all2all] [--naive] -m (g|sg) -q <qpath> -t <tpath>
+        ./chainX [-l <length>] [-a (MEM|MUM)] [--all2all] [--naive] [--optimal] -m (g|sg) -q <qpath>
+                 -t <tpath>
 
 OPTIONS
         <length>    minimum anchor match length (default = 20)
         MEM|MUM     anchor type (default = MUM)
         --all2all   output all to all global distances among query sequences in phylip format
         --naive     use slow 2d dynamic programming algorithm for correctness check
+        --optimal   compute optimal chain by using diagonal distance
         g|sg        distance function (e.g., global or semi-global)
         <qpath>     query sequences in fasta or fastq format
         <tpath>     target sequence in fasta format

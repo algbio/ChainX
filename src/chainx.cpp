@@ -93,6 +93,8 @@ int main(int argc, char **argv)
       {
         if (parameters.naive)
           std::cout << "distance = " << chainx::DP_global(fwd_matches) << "\n";
+        else if (parameters.diagonal)
+          std::cout << "distance = " << chainx::compute_global_optimal(fwd_matches) << "\n";
         else
           std::cout << "distance = " << chainx::compute_global(fwd_matches) << "\n";
       }
@@ -100,6 +102,8 @@ int main(int argc, char **argv)
       {
         if (parameters.naive)
           std::cout << "distance = " << chainx::DP_semiglobal(fwd_matches) << "\n";
+        else if (parameters.diagonal)
+          std::cout << "distance = " << chainx::compute_semiglobal_optimal(fwd_matches) << "\n";
         else
           std::cout << "distance = " << chainx::compute_semiglobal(fwd_matches) << "\n";
       }
@@ -148,6 +152,8 @@ int main(int argc, char **argv)
 
         if (parameters.naive)
           costs[j][i] = costs[i][j] = chainx::DP_global(fwd_matches);
+        else if (parameters.diagonal)
+          costs[j][i] = costs[i][j] = chainx::compute_global_optimal(fwd_matches);
         else
           costs[j][i] = costs[i][j] = chainx::compute_global(fwd_matches);
 
