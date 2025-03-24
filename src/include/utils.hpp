@@ -23,7 +23,7 @@ namespace chainx
     assert (seqs.size() == 0);
 
     kseq_t *seq = kseq_init(fp);
-    int len;
+    long long len;
 
     while ((len = kseq_read(seq)) >= 0) 
     {

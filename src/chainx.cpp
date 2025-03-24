@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   chainx::readSequences(parameters.qfile, queries, query_ids);
   chainx::readSequences(parameters.tfile, target, target_ids);
 
-  int queryLenSum = 0;
+  long long queryLenSum = 0;
   for (auto &q: queries) queryLenSum += q.length();
   std::cerr << "INFO, chainx::main, read " << queries.size() << " queries, " << queryLenSum << " residues\n";
   if (!parameters.all2all) std::cerr << "INFO, chainx::main, read target, " << target[0].length() << " residues\n";
@@ -41,9 +41,17 @@ int main(int argc, char **argv)
   auto tStart = std::chrono::system_clock::now();
   std::cerr << "\nINFO, chainx::main, timer set\n";
 
-  std::vector<std::tuple<int, int, int>> fwd_matches;
+  std::vector<std::tuple<long long, long long, long long>> fwd_matches;
   //lambda function
   auto append_matches = [&](const mummer::mummer::match_t& m) { fwd_matches.emplace_back(m.ref, m.query, m.len); }; //0-based coordinates
+
+  long long bound_start;
+  float ramp_up_factor;
+  if (parameters.originalmagicnumbers)
+  {
+    bound_start = 100;
+    ramp_up_factor = 4;
+  }
 
   if (!parameters.all2all)
   {
@@ -53,7 +61,7 @@ int main(int argc, char **argv)
     std::chrono::duration<double> wctduration = (std::chrono::system_clock::now() - tStart);
     std::cerr << "INFO, chainx::main, suffix array computed in " << wctduration.count() << " seconds\n";
 
-    for (int i = 0; i < queries.size(); i++)
+    for (size_t i = 0; i < queries.size(); i++)
     {
       std::cerr << "\nINFO, chainx::main, timer reset\n";
       tStart = std::chrono::system_clock::now();
@@ -74,8 +82,8 @@ int main(int argc, char **argv)
       fwd_matches.emplace_back(-1,-1,1);
       fwd_matches.emplace_back(target[0].length(), queries[i].length(), 1);
       std::sort (fwd_matches.begin(), fwd_matches.end(),
-          [](const std::tuple<int,int,int>& a,
-            const std::tuple<int,int,int>& b) -> bool
+          [](const std::tuple<long long,long long,long long>& a,
+            const std::tuple<long long,long long,long long>& b) -> bool
           {
           return std::get<0>(a) < std::get<0>(b);
           });
@@ -89,23 +97,33 @@ int main(int argc, char **argv)
 
       //compute anchor-restricted edit distance
       std::cerr << "INFO, chainx::main, query #" << i << " (" << queries[i].length() << " residues), ";
+
+      if (!parameters.originalmagicnumbers)
+      {
+        long long cov = chainx::asymmetric_coverage(fwd_matches);
+        bound_start = std::max((long long)100, (long long)std::floor(1.5*((long long)queries[i].length() - cov)));
+        assert(bound_start >= 0);
+        std::cerr << "(" << cov << " coverage, " << bound_start << " initial guess), ";
+        ramp_up_factor = 4;
+      }
+
       if (parameters.mode == "g")
       {
         if (parameters.naive)
           std::cout << "distance = " << chainx::DP_global(fwd_matches) << "\n";
         else if (parameters.diagonal)
-          std::cout << "distance = " << chainx::compute_global_optimal(fwd_matches) << "\n";
+          std::cout << "distance = " << chainx::compute_global_optimal(fwd_matches, bound_start, ramp_up_factor) << "\n";
         else
-          std::cout << "distance = " << chainx::compute_global(fwd_matches) << "\n";
+          std::cout << "distance = " << chainx::compute_global(fwd_matches, bound_start, ramp_up_factor) << "\n";
       }
       else if (parameters.mode == "sg")
       {
         if (parameters.naive)
           std::cout << "distance = " << chainx::DP_semiglobal(fwd_matches) << "\n";
         else if (parameters.diagonal)
-          std::cout << "distance = " << chainx::compute_semiglobal_optimal(fwd_matches) << "\n";
+          std::cout << "distance = " << chainx::compute_semiglobal_optimal(fwd_matches, bound_start, ramp_up_factor) << "\n";
         else
-          std::cout << "distance = " << chainx::compute_semiglobal(fwd_matches) << "\n";
+          std::cout << "distance = " << chainx::compute_semiglobal(fwd_matches, bound_start, ramp_up_factor) << "\n";
       }
       else
         std::cerr << "ERROR, chainx::main, incorrect mode specified" << "\n";
@@ -117,8 +135,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    std::vector<std::vector<int>> costs (queries.size());
-    for(std::size_t i = 0; i < queries.size(); i++) costs[i] = std::vector<int>(queries.size(), -1);
+    std::vector<std::vector<long long>> costs (queries.size());
+    for(std::size_t i = 0; i < queries.size(); i++) costs[i] = std::vector<long long>(queries.size(), -1);
 
     for (std::size_t i = 0; i < queries.size(); i++)
     {
@@ -144,18 +162,27 @@ int main(int argc, char **argv)
         fwd_matches.emplace_back(-1,-1,1);
         fwd_matches.emplace_back(queries[i].length(), queries[j].length(), 1);
         std::sort (fwd_matches.begin(), fwd_matches.end(),
-            [](const std::tuple<int,int,int>& a,
-              const std::tuple<int,int,int>& b) -> bool
+            [](const std::tuple<long long,long long,long long>& a,
+              const std::tuple<long long,long long,long long>& b) -> bool
             {
             return std::get<0>(a) < std::get<0>(b);
             });
 
+        if (!parameters.originalmagicnumbers)
+        {
+          long cov = chainx::asymmetric_coverage(fwd_matches);
+          bound_start = std::max((long long)100, (long long)std::floor(1.5*((long long)queries[i].length() - cov)));
+          std::cerr << "(" << cov << " coverage, " << bound_start << " initial guess), ";
+          assert(bound_start >= 0);
+          ramp_up_factor = 4;
+        }
+
         if (parameters.naive)
           costs[j][i] = costs[i][j] = chainx::DP_global(fwd_matches);
         else if (parameters.diagonal)
-          costs[j][i] = costs[i][j] = chainx::compute_global_optimal(fwd_matches);
+          costs[j][i] = costs[i][j] = chainx::compute_global_optimal(fwd_matches, bound_start, ramp_up_factor);
         else
-          costs[j][i] = costs[i][j] = chainx::compute_global(fwd_matches);
+          costs[j][i] = costs[i][j] = chainx::compute_global(fwd_matches, bound_start, ramp_up_factor);
 
       }
 

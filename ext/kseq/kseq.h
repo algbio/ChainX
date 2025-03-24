@@ -40,7 +40,7 @@
 #define __KS_TYPE(type_t) \
 	typedef struct __kstream_t { \
 		unsigned char *buf; \
-		int begin, end, is_eof; \
+		long long begin, end, is_eof; \
 		type_t f; \
 	} kstream_t;
 
@@ -65,7 +65,7 @@
 	}
 
 #define __KS_GETC(__read, __bufsize) \
-	static inline int ks_getc(kstream_t *ks) \
+	static inline long long ks_getc(kstream_t *ks) \
 	{ \
 		if (ks_err(ks)) return -3; \
 		if (ks_eof(ks)) return -1; \
@@ -75,7 +75,7 @@
 			if (ks->end == 0) { ks->is_eof = 1; return -1; } \
 			else if (ks->end < 0) { ks->is_eof = 1; return -3; } \
 		} \
-		return (int)ks->buf[ks->begin++]; \
+		return (long long)ks->buf[ks->begin++]; \
 	}
 
 #ifndef KSTRING_T
@@ -91,13 +91,13 @@ typedef struct __kstring_t {
 #endif
 
 #define __KS_GETUNTIL(__read, __bufsize) \
-	static int ks_getuntil2(kstream_t *ks, int delimiter, kstring_t *str, int *dret, int append) \
+	static long long ks_getuntil2(kstream_t *ks, long long delimiter, kstring_t *str, long long *dret, long long append) \
 	{ \
-		int gotany = 0; \
+		long long gotany = 0; \
 		if (dret) *dret = 0; \
 		str->l = append? str->l : 0; \
 		for (;;) { \
-			int i; \
+			long long i; \
 			if (ks_err(ks)) return -3; \
 			if (ks->begin >= ks->end) { \
 				if (!ks->is_eof) { \
@@ -142,7 +142,7 @@ typedef struct __kstring_t {
 		str->s[str->l] = '\0'; \
 		return str->l; \
 	} \
-	static inline int ks_getuntil(kstream_t *ks, int delimiter, kstring_t *str, int *dret) \
+	static inline long long ks_getuntil(kstream_t *ks, long long delimiter, kstring_t *str, long long *dret) \
 	{ return ks_getuntil2(ks, delimiter, str, dret, 0); }
 
 #define KSTREAM_INIT(type_t, __read, __bufsize) \
@@ -175,9 +175,9 @@ typedef struct __kstring_t {
    -3   error reading stream
  */
 #define __KSEQ_READ(SCOPE) \
-	SCOPE int kseq_read(kseq_t *seq) \
+	SCOPE long long kseq_read(kseq_t *seq) \
 	{ \
-		int c,r; \
+		long long c,r; \
 		kstream_t *ks = seq->f; \
 		if (seq->last_char == 0) { /* then jump to the next header line */ \
 			while ((c = ks_getc(ks)) >= 0 && c != '>' && c != '@'); \
@@ -238,6 +238,6 @@ typedef struct __kstring_t {
 	__KSEQ_TYPE(type_t) \
 	extern kseq_t *kseq_init(type_t fd); \
 	void kseq_destroy(kseq_t *ks); \
-	int kseq_read(kseq_t *seq);
+	long long kseq_read(kseq_t *seq);
 
 #endif

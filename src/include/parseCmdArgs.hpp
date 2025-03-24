@@ -18,6 +18,7 @@ namespace chainx
     bool naive = false;               //use naive 2d dynamic programming algorithm similar to edit distance
     bool all2all = false;             //compute all to all global distance among query sequences
     bool diagonal = false;            //compute optimal chain by using diagonal distance
+    bool originalmagicnumbers = false;//use ChainX original magic numbers (start guess = 100 and ramp-up factor or 4), instead of inverse query coverage * 1.5 and ramp-up factor of 4
   };
 
   void parseandSave_chainx(int argc, char** argv, Parameters &param)
@@ -30,6 +31,7 @@ namespace chainx
        clipp::option("--all2all").set(param.all2all).doc("output all to all global distances among query sequences in phylip format"),
        clipp::option("--naive").set(param.naive).doc("use slow 2d dynamic programming algorithm for correctness check"),
        clipp::option("--optimal").set(param.diagonal).doc("compute optimal chain by using diagonal distance"),
+       clipp::option("--originalmagicnumbers").set(param.originalmagicnumbers).doc("use original magic numbers instead of inverse query coverage times 1.5 and ramp-up factor of 4"),
        clipp::required("-m") & (clipp::required("g").set(param.mode) | clipp::required("sg").set(param.mode)).doc("distance function (e.g., global or semi-global)"),
        clipp::required("-q") & clipp::value("qpath", param.qfile).doc("query sequences in fasta or fastq format"),
        clipp::required("-t") & clipp::value("tpath", param.tfile).doc("target sequence in fasta format")
@@ -66,6 +68,12 @@ namespace chainx
     if (param.naive && param.diagonal)
     {
         std::cerr << "ERROR, chainx::parseandSave, naive and optimal chaining mode are not compatible" << std::endl;
+        exit(1);
+    }
+
+    if (param.naive && param.originalmagicnumbers)
+    {
+        std::cerr << "ERROR, chainx::parseandSave, naive and original magic number flag are not compatible" << std::endl;
         exit(1);
     }
 
