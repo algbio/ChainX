@@ -19,22 +19,20 @@ namespace chainx
    * @brief   compute asymmetric anchor coverage of first sequence, given the sorted anchor list
    *
    **/
-  int asymmetric_coverage(const std::vector<std::tuple<long long, long long, long long>> &anchors)
+  long long asymmetric_coverage(const std::vector<std::tuple<long long, long long, long long>> &anchors)
   {
     // we assume anchors is sorted by starting position in the query
-    // we assume the anchors were computed greedily (?) and are NOT nested
     // we assume the first and last are dummy anchors
     long long cov = 0;
     for (long long i = 1, consumed = 0; i < anchors.size() - 1; i++)
     {
-      const long qend = std::get<0>(anchors[i]) + std::get<2>(anchors[i]) - 1;
-      if (qend <= consumed)
-      {
-        continue;
-      }
+      const long long qstart = std::get<0>(anchors[i]);
+      const long long qend = std::get<0>(anchors[i]) + std::get<2>(anchors[i]) - 1;
+
+      if (consumed - 1 >= qend) continue;
 
       cov += qend - std::max(std::get<0>(anchors[i]), consumed) + 1;
-      consumed = qend;
+      consumed = qend + 1;
     }
     return cov;
   }

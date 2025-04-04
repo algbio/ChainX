@@ -101,7 +101,7 @@ int main(int argc, char **argv)
       if (!parameters.originalmagicnumbers)
       {
         long long cov = chainx::asymmetric_coverage(fwd_matches);
-        bound_start = std::max((long long)100, (long long)std::floor(1.5*((long long)queries[i].length() - cov)));
+        bound_start = std::max((long long)100, (long long)std::floor(1.1*((long long)queries[i].length() - cov)));
         assert(bound_start >= 0);
         std::cerr << "(" << cov << " coverage, " << bound_start << " initial guess), ";
         ramp_up_factor = 4;
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
         if (!parameters.originalmagicnumbers)
         {
           long cov = chainx::asymmetric_coverage(fwd_matches);
-          bound_start = std::max((long long)100, (long long)std::floor(1.5*((long long)queries[i].length() - cov)));
+          bound_start = std::max((long long)100, (long long)std::floor(1.1*((long long)queries[i].length() - cov)));
           std::cerr << "(" << cov << " coverage, " << bound_start << " initial guess), ";
           assert(bound_start >= 0);
           ramp_up_factor = 4;
