@@ -30,13 +30,9 @@ test:
 	# Table 2
 	data/correlation_semiglobal/run_chainx_test.sh MUM 20
 	data/correlation_global/run_chainx_test.sh
-	# Table 3
-	data/correlation_semiglobal/run_chainx_test.sh MUM 20
-	data/correlation_semiglobal/run_chainx_test.sh MUM 10
-	data/correlation_semiglobal/run_chainx_test.sh MUM  7
-	data/correlation_semiglobal/run_chainx_test.sh MEM 20
-	data/correlation_semiglobal/run_chainx_test.sh MEM 10
-	data/correlation_semiglobal/run_chainx_test.sh MEM  7
+	# human long read test
+	data/human/get_dataset.sh
+	data/human/run_test.sh
 
 clean:
 	+$(MAKE) -C ext/minimap2-2.24 clean
