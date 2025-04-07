@@ -32,7 +32,7 @@ test:
 	data/correlation_global/run_chainx_test.sh
 	# human long read test
 	data/human/get_dataset.sh
-	data/human/run_test.sh
+	data/human/run_test.sh MUM 20
 
 clean:
 	+$(MAKE) -C ext/minimap2-2.24 clean

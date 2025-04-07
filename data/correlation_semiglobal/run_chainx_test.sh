@@ -67,7 +67,7 @@ do
 	echo "avg iters" > stats_iters_$t
 done
 
-for m in "75_80" "80_90" "90_100" 
+for m in "90_100" "80_90" "75_80"
 do
 	echo "$m" >> stats_headers
 	for t in original optimal optimal_nonconstant

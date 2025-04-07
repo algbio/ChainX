@@ -11,7 +11,7 @@ fi
 
 chainx="../../chainX"
 ref="chm13v2.0_concat.fa.gz"
-query="sample_100k.fasta"
+query="sample_100k.fa.gz"
 mode="-m sg"
 usrbintime="/usr/bin/time -f"
 options="%e total time elapsed (s)\n%M maxresident k"
