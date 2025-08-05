@@ -39,14 +39,30 @@ then
 fi
 echo " done (it improves or stays the same)."
 
-echo -n $(paste \
+improvements=$(paste \
 	<(grep "distance =" original            | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") \
 	<(grep "distance =" optimal_nonconstant | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") | \
-	awk '{if ($1 > $2) {improved += 1}} END {print improved}') "chaining costs improve"
-echo " with average improvement ratio of" $(paste \
-	<(grep "distance =" original            | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") \
-	<(grep "distance =" optimal_nonconstant | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") | \
-	awk '{if ($1 > $2) {ratiosum += $1 / $2 ; n += 1}} END {print ratiosum / n}')
+	awk 'BEGIN {improved = 0} {if ($1 > $2) {improved += 1}} END {print improved}')
+echo -n "$improvements chaining costs improve"
+if [ "$improvements" -ne 0 ]
+then
+	echo
+	echo -n "absolute improvement statistics (min, first quartile, median, third quartile, max, mean): "
+	paste \
+		<(grep "distance =" original            | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") \
+		<(grep "distance =" optimal_nonconstant | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") | \
+		awk '{if ($1 > $2) {print $1 - $2}}' > absolute_improvements
+	octave --eval "format none; x = dlmread('absolute_improvements'); disp(transpose(statistics(x)(1:6,:)));"
+
+	echo -n "relative improvement statistics (min, first quartile, median, third quartile, max, mean): "
+	paste \
+		<(grep "distance =" original            | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") \
+		<(grep "distance =" optimal_nonconstant | cut -d'=' -f2 | cut -d')' -f2 | tr -d " ") | \
+		awk '{if ($1 > $2) {print $1 / $2}}' > relative_improvements
+	octave --eval "format none; x = dlmread('relative_improvements'); disp(transpose(statistics(x)(1:6,:)));"
+else
+	echo
+fi
 
 # time, memory, iterations
 for t in original optimal_nonconstant
@@ -68,4 +84,4 @@ paste -d'$' \
 	stats_time_optimal_nonconstant  stats_space_optimal_nonconstant stats_iters_optimal_nonconstant \
 	| cat <(echo -e "ChainX\$\$\$ChainX-opt*") - | column -t -s'$'
 
-rm original optimal_nonconstant stats_time_original stats_space_original stats_iters_original stats_time_optimal_nonconstant stats_space_optimal_nonconstant stats_iters_optimal_nonconstant
+rm original optimal_nonconstant stats_time_original stats_space_original stats_iters_original stats_time_optimal_nonconstant stats_space_optimal_nonconstant stats_iters_optimal_nonconstant absolute_improvements relative_improvements
