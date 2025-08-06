@@ -1,6 +1,9 @@
 # ChainX
+![Colinear chain between two sequences showing overlap and gap costs](docs/chain.png)
 
-Fork of ChainX, a tool that computes co-linear chaining costs between an input target and query sequences. It supports global and semi-global comparison modes. A unique aspect of ChainX is that it supports anchor overlaps and gap costs, and produces optimal chaining cost when using option `--optimal`. For a pair of sequences, (i) computing chaining chaining cost can be orders of magnitude faster than computing edit distance, and (ii) chaining costs and edit distances correlate well with each other. As a result, ChainX can serve as a faster alternative to computing edit distance. More details about theoretical and practical efficacy of ChainX are available in the [ChainX paper](https://doi.org/10.1089/cmb.2022.0266).
+Fork of [at-cg/ChainX](https://github.com/at-cg/ChainX), a tool that computes co-linear chaining costs between an input target and query sequences. It supports global and semi-global comparison modes. The new features in this fork are:
+ - optimal chaining (with option `--optimal`), since ChainX can output a suboptimal chain in a small number of edge cases;
+ - non-constant magic numbers to minimize the iterations of the chaining algorithm (the original behaviour can be restored with `--originalmagicnumbers`).
 
 ## Dependencies / External libraries
 ChainX repository uses many third-party libraries. These are separately provided in [ext](ext) folder. 
@@ -13,6 +16,8 @@ ChainX repository uses many third-party libraries. These are separately provided
 - [clipp](https://github.com/muellan/clipp)
 - [cxx-prettyprint](https://github.com/louisdx/cxx-prettyprint)
 - [kseq](https://github.com/lh3/seqtk)
+
+Additionally, the [experimental tests](data) requires awk, wget, [seqtk](https://github.com/lh3/seqtk), and [GNU octave](https://octave.org/).
 
 ## Installation
 ```sh
@@ -65,7 +70,14 @@ INFO, chainx::main, distance computation finished (0.255348 seconds elapsed)
 ```
 
 ## Experiments
-You can replicate the experiments from the ChainX paper with command `make test`, where the original algorithm (`--originalmagicnumbers`) is compared to the new optimal version (`--originalmagicnumbers --optimal`) and the final optimal version (`--optimal`).
+Command `make test`:
+- replicates the ChainX experiments and compares the original algorithm (`--originalmagicnumbers`) to the new optimal version (`--originalmagicnumbers --optimal`) and the final optimal version (`--optimal`);
+- runs ChainX and the final optimal version (`--optimal`) in semi-global mode on 100K PacBio HiFi reads on the on the T2T-CHM13 reference, requiring ~25GB of disk space and ~50GB of RAM.
+
+In the experiment on human long reads, the optimal version has comparable speed to original ChainX and finds a better chain for 2.30% reads (more details in the paper).
+
+![Box plot of absolute and relative improvement of optimal ChainX](docs/improvement.png)
 
 ## Publications
 - **Chirag Jain, Daniel Gibney and Sharma Thankachan**. "[Algorithms for Colinear Chaining with Overlaps and Gap Costs](https://doi.org/10.1089/cmb.2022.0266)". *Journal of Computational Biology*, 2022.
+- **Nicola Rizzo, Manuel Cáceres, and Veli Mäkinen**. "[Practical colinear chaining on sequences revisited](https://doi.org/10.1007/978-981-95-0695-8_17)" ([arXiv](https://doi.org/10.48550/arXiv.2506.11750)). *ISBRA 2025*.
